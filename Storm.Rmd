@@ -1,0 +1,143 @@
+---
+title: "Analysis of U.S. National Oceanic and Atmospheric Administration's (NOAA) storm data"
+output: html_document
+---
+
+###Synopsis: 
+
+This report analyze U.S. National Oceanic and Atmospheric Administration's (NOAA) storm data from 1994 - 2011. Storm Data is from the National Weather Service. In this peroid, the weather event that causes the most fatalities is Heat. Tornados ause the most injuries. I also found that tornados cause most of the property damages, at $1.4B, while hail cause the most damges to crops, at $6.5B. 
+
+
+###Date Processing:
+The data is download as follows:
+
+url<-"http://d396qusza40orc.cloudfront.net/repdata/data/StormData.csv.bz2"
+
+f<-file.path(getwd(), "StormData.csv.bz2")
+
+download.file(url, f)
+
+
+
+
+The data is read by
+```{r, cache = TRUE, warning=FALSE, message=FALSE}
+d<-read.csv(bzfile("StormData.csv.bz2"))
+```
+The data is organize using dplyr using the following:
+```{r, warning=FALSE, message=FALSE}
+library(dplyr) 	
+
+d2<- tbl_df(d)
+d2<-select(d2, BGN_DATE, EVTYPE, FATALITIES, INJURIES, PROPDMG, PROPDMGEXP, CROPDMG, CROPDMGEXP)
+```
+This anlysis is confine the data in the period of 1994 - 2011, since the data is more complete, and it is more representative of recent climate and weather patterns. I used lubridate library to extract the data in this peroid.
+
+```{r, warning=FALSE, message=FALSE}
+library(lubridate)
+
+d2$BGN_DATE<-parse_date_time(d2$BGN_DATE, orders="mdy hms")
+d2<-filter(d2, BGN_DATE >= "1994-01-01")
+
+```
+**Analysis of weather events most harmful to population health**
+
+I grouped the storm data by weather event and analyzed the number of fatalities and injuries associated with each type of events. This is performed in the following manner:
+
+```{r}
+harm<-select(d2, EVTYPE, FATALITIES, INJURIES)
+harm2<-group_by(harm, EVTYPE)
+sum_num<-summarise_each(harm2, funs(sum)) 
+
+```
+To determine the top 15 weather event that causes the most fatalities, I use the following:
+```{r}
+death<-arrange(sum_num, desc(FATALITIES))
+death2<-head(select(death, EVTYPE, FATALITIES), 15)
+```
+To determine the top 15 weather event that causes the most injuries, I use the following:
+```{r}
+hurt<-arrange(sum_num, desc(INJURIES))
+hurt2<-head(select(hurt, EVTYPE, INJURIES), 15)
+```
+
+**Analysis of weather events with greatest economic consequences**
+Weather events and the associated property damage is analyzed. I performed data processing using PROPDMGEXP where 'M' or 'm' is represent a factor a million, and 'B' or 'b' means a factor of billion, and 'K' or 'k' represent thousands, etc..I only select data with property damages exceeding thousands of dollars. The base unit is set in Millions dollars. This was performed as follows.
+```{r}
+d2_PROP<-select(d2, EVTYPE, PROPDMG, PROPDMGEXP)
+d3_PROP<-filter(d2_PROP, PROPDMGEXP == "M" | PROPDMGEXP == "m" | PROPDMGEXP == "B" | PROPDMGEXP == "b" | PROPDMGEXP == "K" | PROPDMGEXP == "k" )
+d3_PROP<- mutate(d3_PROP, PROPDMG2 = ifelse((PROPDMGEXP == 'B' | PROPDMGEXP=='b'), PROPDMG*1000, ifelse((PROPDMGEXP == 'K' | PROPDMGEXP=='k'), PROPDMG/1000, PROPDMG)))
+d3_PROP<- mutate(d3_PROP, PROPDMG2 = ifelse((PROPDMGEXP == 'K' | PROPDMGEXP=='k'), PROPDMG/1000, PROPDMG))
+
+```
+Extracting the top 15 weather events that cause the most property damges:
+
+```{r}
+PROP<-select(d3_PROP, EVTYPE, PROPDMG2)
+PROP2<-group_by(PROP, EVTYPE)
+sum_PROP<-summarise_each(PROP2, funs(sum)) 
+
+PROP_DMG<-arrange(sum_PROP, desc(PROPDMG2))
+PROP_DMG2<-head(PROP_DMG, 15)
+```
+Next, I analyze the events associated with the most crop damage using similar approaches as above:
+```{r}
+d2_CROP<-select(d2, EVTYPE, CROPDMG, CROPDMGEXP)
+d3_CROP<-filter(d2_CROP, CROPDMGEXP == "M" | CROPDMGEXP == "m" | CROPDMGEXP == "B" | CROPDMGEXP == "b" | CROPDMGEXP == "K" | CROPDMGEXP == "k")
+d3_CROP<- mutate(d3_CROP, CROPDMG2 = ifelse((CROPDMGEXP == 'B' | CROPDMGEXP=='b'), CROPDMG*1000, CROPDMG))
+d3_CROP<- mutate(d3_CROP, CROPDMG2 = ifelse((CROPDMGEXP == 'B' | CROPDMGEXP=='b'), CROPDMG/1000, CROPDMG))
+```
+
+To obtain the top 15 events that cause most crop damage:
+```{r}
+CROP<-select(d3_CROP, EVTYPE, CROPDMG2)
+CROP2<-group_by(CROP, EVTYPE)
+sum_CROP<-summarise_each(CROP2, funs(sum)) 
+
+CROP_DMG<-arrange(sum_CROP, desc(CROPDMG2))
+CROP_DMG2<-head(CROP_DMG, 15)
+```
+
+###Results:
+1.Across the United States, which types of events (as indicated in the EVTYPE variable) are most harmful with respect to population health?
+Top 15 events that cause fatalities:
+```{r}
+death2
+```
+Top 15 events that cause injuries:
+```{r}
+hurt2
+```
+
+These data are plotted using gglot2:
+```{r, warning=FALSE, message=FALSE}
+library(ggplot2)
+library(gridExtra)
+g_death<-ggplot(death2, aes(x=reorder(EVTYPE,FATALITIES), y=FATALITIES))+geom_bar(stat='identity')+coord_flip()+xlab("Weather Event")+ylab("Fatalities")
+g_hurt<-ggplot(hurt2, aes(x=reorder(EVTYPE,INJURIES), y=INJURIES))+geom_bar(stat='identity')+coord_flip()+xlab("Weather Event")+ylab("Injuries")
+
+grid.arrange(g_death,g_hurt, nrow = 1, top="Fatalities and Injuries by Weather events\n (1994-2011)")
+```
+
+Heat causes the most fatalities. Tornado causes the most injuries.
+
+2.Across the United States, which types of events have the greatest economic consequences?
+Top 15 events that cause most property damage:
+
+```{r}
+PROP_DMG2
+```
+Top 15 events that cause most crop damage:
+```{r}
+CROP_DMG2
+```
+These data are plotted as follows
+```{r}
+g_prop<-ggplot(PROP_DMG2, aes(x=reorder(EVTYPE,PROPDMG2), y=PROPDMG2))+geom_bar(stat='identity')+coord_flip()+xlab("Weather Event")+ylab("Property Damages \n (Mil USD)")
+g_crop<-ggplot(CROP_DMG2, aes(x=reorder(EVTYPE,CROPDMG2), y=CROPDMG2))+geom_bar(stat='identity')+coord_flip()+xlab("Weather Event")+ylab("Crop Damages \n (Mil USD)")
+
+grid.arrange(g_prop,g_crop, nrow = 1, top="Property and Crop Damages by Weather events \n (1994-2011)")
+```
+
+Tornado causes the most property damages. Hail causes the most damages to crops.
+
