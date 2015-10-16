@@ -5,7 +5,7 @@ output: html_document
 
 ###Synopsis: 
 
-This report analyze U.S. National Oceanic and Atmospheric Administration's (NOAA) storm data from 1994 - 2011. Storm Data is from the National Weather Service. In this peroid, the weather event that causes the most fatalities is Heat. Tornados ause the most injuries. I also found that tornados cause most of the property damages, at $1.4B, while hail cause the most damges to crops, at $6.5B. 
+This report analyze U.S. National Oceanic and Atmospheric Administration's (NOAA) storm data from 1994 - 2011. Storm Data is from the National Weather Service. In this peroid, the weather event that causes the most fatalities is Heat. Tornados ause the most injuries. I also found that flood cause most of the property damages, at $1.44B, while drought cause the most damges to crops, at $1.39B. 
 
 
 ###Date Processing:
@@ -72,7 +72,6 @@ Weather events and the associated property damage is analyzed. I performed data 
 d2_PROP<-select(d2, EVTYPE, PROPDMG, PROPDMGEXP)
 d3_PROP<-filter(d2_PROP, PROPDMGEXP == "M" | PROPDMGEXP == "m" | PROPDMGEXP == "B" | PROPDMGEXP == "b" | PROPDMGEXP == "K" | PROPDMGEXP == "k" )
 d3_PROP<- mutate(d3_PROP, PROPDMG2 = ifelse((PROPDMGEXP == 'B' | PROPDMGEXP=='b'), PROPDMG*1000, ifelse((PROPDMGEXP == 'K' | PROPDMGEXP=='k'), PROPDMG/1000, PROPDMG)))
-d3_PROP<- mutate(d3_PROP, PROPDMG2 = ifelse((PROPDMGEXP == 'K' | PROPDMGEXP=='k'), PROPDMG/1000, PROPDMG))
 ```
 Extracting the top 15 weather events that cause the most property damges:
 
@@ -90,8 +89,7 @@ Next, I analyze the events associated with the most crop damage using similar ap
 ```r
 d2_CROP<-select(d2, EVTYPE, CROPDMG, CROPDMGEXP)
 d3_CROP<-filter(d2_CROP, CROPDMGEXP == "M" | CROPDMGEXP == "m" | CROPDMGEXP == "B" | CROPDMGEXP == "b" | CROPDMGEXP == "K" | CROPDMGEXP == "k")
-d3_CROP<- mutate(d3_CROP, CROPDMG2 = ifelse((CROPDMGEXP == 'B' | CROPDMGEXP=='b'), CROPDMG*1000, CROPDMG))
-d3_CROP<- mutate(d3_CROP, CROPDMG2 = ifelse((CROPDMGEXP == 'B' | CROPDMGEXP=='b'), CROPDMG/1000, CROPDMG))
+d3_CROP<- mutate(d3_CROP, CROPDMG2 = ifelse((CROPDMGEXP == 'B' | CROPDMGEXP=='b'), CROPDMG*1000, ifelse((CROPDMGEXP == 'K' | CROPDMGEXP=='k'), CROPDMG/1000, CROPDMG)))
 ```
 
 To obtain the top 15 events that cause most crop damage:
@@ -186,22 +184,22 @@ PROP_DMG2
 ```
 ## Source: local data frame [15 x 2]
 ## 
-##                EVTYPE  PROPDMG2
-## 1               FLOOD 21802.109
-## 2             TORNADO 20325.668
-## 3         FLASH FLOOD 14717.393
-## 4                HAIL 13536.844
-## 5           HURRICANE  6168.519
-## 6           TSTM WIND  4484.273
-## 7           HIGH WIND  3968.239
-## 8   HURRICANE/TYPHOON  3871.340
-## 9           ICE STORM  3832.378
-## 10           WILDFIRE  3726.154
-## 11  THUNDERSTORM WIND  3480.404
-## 12     TROPICAL STORM  2558.536
-## 13       WINTER STORM  1560.097
-## 14   WILD/FOREST FIRE  1503.330
-## 15 THUNDERSTORM WINDS  1300.254
+##               EVTYPE   PROPDMG2
+## 1              FLOOD 144179.609
+## 2  HURRICANE/TYPHOON  69305.840
+## 3        STORM SURGE  43193.536
+## 4            TORNADO  25620.368
+## 5        FLASH FLOOD  15716.393
+## 6               HAIL  15335.044
+## 7          HURRICANE  11862.819
+## 8     TROPICAL STORM   7703.386
+## 9          HIGH WIND   5266.939
+## 10          WILDFIRE   4765.114
+## 11  STORM SURGE/TIDE   4641.188
+## 12         TSTM WIND   4484.273
+## 13         ICE STORM   3832.378
+## 14 THUNDERSTORM WIND   3480.404
+## 15    HURRICANE OPAL   3172.846
 ```
 Top 15 events that cause most crop damage:
 
@@ -212,22 +210,22 @@ CROP_DMG2
 ```
 ## Source: local data frame [15 x 2]
 ## 
-##                EVTYPE  CROPDMG2
-## 1                HAIL 561292.93
-## 2         FLASH FLOOD 170534.86
-## 3               FLOOD 157866.88
-## 4           TSTM WIND 109192.60
-## 5             TORNADO  96679.72
-## 6   THUNDERSTORM WIND  66781.45
-## 7             DROUGHT  33347.12
-## 8           HIGH WIND  17273.21
-## 9  THUNDERSTORM WINDS  15295.13
-## 10         HEAVY RAIN  11122.80
-## 11       FROST/FREEZE   7034.14
-## 12       EXTREME COLD   6121.14
-## 13     TROPICAL STORM   5394.12
-## 14     FLASH FLOODING   5076.05
-## 15          HURRICANE   4839.31
+##               EVTYPE   CROPDMG2
+## 1            DROUGHT 13922.0660
+## 2              FLOOD  5506.9424
+## 3          ICE STORM  5022.1135
+## 4               HAIL  2982.6991
+## 5          HURRICANE  2741.4100
+## 6  HURRICANE/TYPHOON  2607.8728
+## 7        FLASH FLOOD  1402.6615
+## 8       EXTREME COLD  1292.9730
+## 9       FROST/FREEZE  1094.0860
+## 10        HEAVY RAIN   733.3998
+## 11    TROPICAL STORM   677.8410
+## 12         HIGH WIND   633.5663
+## 13         TSTM WIND   553.9973
+## 14    EXCESSIVE HEAT   492.4020
+## 15 THUNDERSTORM WIND   414.8331
 ```
 These data are plotted as follows
 
@@ -240,5 +238,5 @@ grid.arrange(g_prop,g_crop, nrow = 1, top="Property and Crop Damages by Weather 
 
 ![plot of chunk unnamed-chunk-16](figure/unnamed-chunk-16-1.png) 
 
-Tornado causes the most property damages. Hail causes the most damages to crops.
+Flood causes the most property damages. Drought causes the most damages to crops.
 
