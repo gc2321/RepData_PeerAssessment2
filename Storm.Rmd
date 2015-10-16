@@ -5,7 +5,7 @@ output: html_document
 
 ###Synopsis: 
 
-This report analyze U.S. National Oceanic and Atmospheric Administration's (NOAA) storm data from 1994 - 2011. Storm Data is from the National Weather Service. In this peroid, the weather event that causes the most fatalities is Heat. Tornados ause the most injuries. I also found that tornados cause most of the property damages, at $1.4B, while hail cause the most damges to crops, at $6.5B. 
+This report analyze U.S. National Oceanic and Atmospheric Administration's (NOAA) storm data from 1994 - 2011. Storm Data is from the National Weather Service. In this peroid, the weather event that causes the most fatalities is Heat. Tornados ause the most injuries. I also found that flood cause most of the property damages, at $1.44B, while drought cause the most damges to crops, at $1.39B. 
 
 
 ###Date Processing:
@@ -67,7 +67,7 @@ Weather events and the associated property damage is analyzed. I performed data 
 d2_PROP<-select(d2, EVTYPE, PROPDMG, PROPDMGEXP)
 d3_PROP<-filter(d2_PROP, PROPDMGEXP == "M" | PROPDMGEXP == "m" | PROPDMGEXP == "B" | PROPDMGEXP == "b" | PROPDMGEXP == "K" | PROPDMGEXP == "k" )
 d3_PROP<- mutate(d3_PROP, PROPDMG2 = ifelse((PROPDMGEXP == 'B' | PROPDMGEXP=='b'), PROPDMG*1000, ifelse((PROPDMGEXP == 'K' | PROPDMGEXP=='k'), PROPDMG/1000, PROPDMG)))
-d3_PROP<- mutate(d3_PROP, PROPDMG2 = ifelse((PROPDMGEXP == 'K' | PROPDMGEXP=='k'), PROPDMG/1000, PROPDMG))
+
 
 ```
 Extracting the top 15 weather events that cause the most property damges:
@@ -84,8 +84,8 @@ Next, I analyze the events associated with the most crop damage using similar ap
 ```{r}
 d2_CROP<-select(d2, EVTYPE, CROPDMG, CROPDMGEXP)
 d3_CROP<-filter(d2_CROP, CROPDMGEXP == "M" | CROPDMGEXP == "m" | CROPDMGEXP == "B" | CROPDMGEXP == "b" | CROPDMGEXP == "K" | CROPDMGEXP == "k")
-d3_CROP<- mutate(d3_CROP, CROPDMG2 = ifelse((CROPDMGEXP == 'B' | CROPDMGEXP=='b'), CROPDMG*1000, CROPDMG))
-d3_CROP<- mutate(d3_CROP, CROPDMG2 = ifelse((CROPDMGEXP == 'B' | CROPDMGEXP=='b'), CROPDMG/1000, CROPDMG))
+d3_CROP<- mutate(d3_CROP, CROPDMG2 = ifelse((CROPDMGEXP == 'B' | CROPDMGEXP=='b'), CROPDMG*1000, ifelse((CROPDMGEXP == 'K' | CROPDMGEXP=='k'), CROPDMG/1000, CROPDMG)))
+
 ```
 
 To obtain the top 15 events that cause most crop damage:
@@ -139,5 +139,5 @@ g_crop<-ggplot(CROP_DMG2, aes(x=reorder(EVTYPE,CROPDMG2), y=CROPDMG2))+geom_bar(
 grid.arrange(g_prop,g_crop, nrow = 1, top="Property and Crop Damages by Weather events \n (1994-2011)")
 ```
 
-Tornado causes the most property damages. Hail causes the most damages to crops.
+Flood causes the most property damages. Drought causes the most damages to crops.
 
